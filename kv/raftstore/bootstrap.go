@@ -44,7 +44,7 @@ func BootstrapStore(engines *engine_util.Engines, clusterID, storeID uint64) err
 		return err
 	}
 	if !empty {
-		return errors.New("kv store is not empty and ahs alread had data.")
+		return errors.New("kv store is not empty and has already had data.")
 	}
 	empty, err = isRangeEmpty(engines.Raft, meta.MinKey, meta.MaxKey)
 	if err != nil {
@@ -62,7 +62,7 @@ func BootstrapStore(engines *engine_util.Engines, clusterID, storeID uint64) err
 	return nil
 }
 
-func PrepareBootstrap(engins *engine_util.Engines, storeID, regionID, peerID uint64) (*metapb.Region, error) {
+func PrepareBootstrap(engines *engine_util.Engines, storeID, regionID, peerID uint64) (*metapb.Region, error) {
 	region := &metapb.Region{
 		Id:       regionID,
 		StartKey: []byte{},
@@ -78,7 +78,7 @@ func PrepareBootstrap(engins *engine_util.Engines, storeID, regionID, peerID uin
 			},
 		},
 	}
-	err := PrepareBootstrapCluster(engins, region)
+	err := PrepareBootstrapCluster(engines, region)
 	if err != nil {
 		return nil, err
 	}
