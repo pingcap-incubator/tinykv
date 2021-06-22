@@ -353,7 +353,7 @@ func TestConcurrent2B(t *testing.T) {
 
 func TestUnreliable2B(t *testing.T) {
 	// Test: unreliable net, many clients (2B) ...
-	GenericTest(t, "2B", 5, true, false, false, -1, false, false)
+	GenericTest(t, "2B", 5, true, false, true, -1, false, false)
 }
 
 // Submit a request in the minority partition and check that the requests
