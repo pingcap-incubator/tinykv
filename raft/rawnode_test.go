@@ -62,7 +62,7 @@ func TestRawNodeProposeAndConfChange3A(t *testing.T) {
 	}
 	rawNode.ProposeConfChange(cc)
 
-	entries := rawNode.Raft.RaftLog.entries
+	entries := rawNode.Raft.RaftLog.allEntries()
 	if l := len(entries); l < 2 {
 		t.Fatalf("len(entries) = %d, want >= 2", l)
 	} else {

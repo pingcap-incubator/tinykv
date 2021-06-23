@@ -175,7 +175,7 @@ func TestLeaderElectionOverwriteNewerLogs2AB(t *testing.T) {
 	// term 3 at index 2).
 	for i := range n.peers {
 		sm := n.peers[i].(*Raft)
-		entries := sm.RaftLog.entries
+		entries := sm.RaftLog.allEntries()
 		if len(entries) != 2 {
 			t.Fatalf("node %d: len(entries) == %d, want 2", i, len(entries))
 		}
@@ -735,8 +735,8 @@ func TestAllServerStepdown2AB(t *testing.T) {
 			if sm.RaftLog.LastIndex() != tt.windex {
 				t.Errorf("#%d.%d index = %v , want %v", i, j, sm.RaftLog.LastIndex(), tt.windex)
 			}
-			if uint64(len(sm.RaftLog.entries)) != tt.windex {
-				t.Errorf("#%d.%d len(ents) = %v , want %v", i, j, len(sm.RaftLog.entries), tt.windex)
+			if uint64(len(sm.RaftLog.allEntries())) != tt.windex {
+				t.Errorf("#%d.%d len(ents) = %v , want %v", i, j, len(sm.RaftLog.allEntries()), tt.windex)
 			}
 			wlead := uint64(2)
 			if msgType == pb.MessageType_MsgRequestVote {

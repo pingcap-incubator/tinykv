@@ -22,8 +22,8 @@ import pb "github.com/pingcap-incubator/tinykv/proto/pkg/eraftpb"
 //  --------|------------------------------------------------|
 //                            log entries
 //
-// for simplify the RaftLog implement should manage all log entries
-// that not truncated
+// Hint: the implement of RaftLog can be much more simply, if RaftLog
+// contains all log entries including stabled and unstatble entries
 type RaftLog struct {
 	// storage contains all stable entries since the last snapshot.
 	storage Storage
@@ -42,7 +42,7 @@ type RaftLog struct {
 	// Everytime handling `Ready`, the unstabled logs will be included.
 	stabled uint64
 
-	// all entries that have not yet compact.
+	// the log entries
 	entries []pb.Entry
 
 	// the incoming unstable snapshot, if any.
@@ -59,13 +59,6 @@ func newLog(storage Storage) *RaftLog {
 	return nil
 }
 
-// We need to compact the log entries in some point of time like
-// storage compact stabled log entries prevent the log entries
-// grow unlimitedly in memory
-func (l *RaftLog) maybeCompact() {
-	// Your Code Here (2C).
-}
-
 // unstableEntries return all the unstable entries
 func (l *RaftLog) unstableEntries() []pb.Entry {
 	// Your Code Here (2A).
@@ -74,6 +67,13 @@ func (l *RaftLog) unstableEntries() []pb.Entry {
 
 // nextEnts returns all the committed but not applied entries
 func (l *RaftLog) nextEnts() (ents []pb.Entry) {
+	// Your Code Here (2A).
+	return nil
+}
+
+// allEntries returns all entries including stabled and unstatble
+// entries
+func (l *RaftLog) allEntries() (ents []pb.Entry) {
 	// Your Code Here (2A).
 	return nil
 }
