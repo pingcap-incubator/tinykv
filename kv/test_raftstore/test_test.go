@@ -98,28 +98,31 @@ func checkConcurrentAppends(t *testing.T, v string, counts []int) {
 }
 
 // repartition the servers periodically
-func partitioner(t *testing.T, cluster *Cluster, ch chan bool, done *int32, unreliable bool, electionTimeout time.Duration) {
+func partitioner(t *testing.T, cluster *Cluster, ch chan bool, done *int32, unreliable bool, partitions bool, electionTimeout time.Duration) {
 	defer func() { ch <- true }()
 	for atomic.LoadInt32(done) == 0 {
-		a := make([]int, cluster.count)
-		for i := 0; i < cluster.count; i++ {
-			a[i] = (rand.Int() % 2)
-		}
-		pa := make([][]uint64, 2)
-		for i := 0; i < 2; i++ {
-			pa[i] = make([]uint64, 0)
-			for j := 1; j <= cluster.count; j++ {
-				if a[j-1] == i {
-					pa[i] = append(pa[i], uint64(j))
+		if partitions {
+			a := make([]int, cluster.count)
+			for i := 0; i < cluster.count; i++ {
+				a[i] = (rand.Int() % 2)
+			}
+			pa := make([][]uint64, 2)
+			for i := 0; i < 2; i++ {
+				pa[i] = make([]uint64, 0)
+				for j := 1; j <= cluster.count; j++ {
+					if a[j-1] == i {
+						pa[i] = append(pa[i], uint64(j))
+					}
 				}
 			}
+			cluster.ClearFilters()
+			log.Infof("partition: %v, %v", pa[0], pa[1])
+			cluster.AddFilter(&PartitionFilter{
+				s1: pa[0],
+				s2: pa[1],
+			})
 		}
-		cluster.ClearFilters()
-		log.Infof("partition: %v, %v", pa[0], pa[1])
-		cluster.AddFilter(&PartitionFilter{
-			s1: pa[0],
-			s2: pa[1],
-		})
+
 		if unreliable {
 			cluster.AddFilter(&DropFilter{})
 		}
@@ -236,10 +239,14 @@ func GenericTest(t *testing.T, part string, nclients int, unreliable bool, crash
 			}
 		})
 
-		if partitions {
+		// enable cases:
+		//               partitions    no partitions
+		//    unreliable       1                1
+		// no unreliable       1                1
+		if unreliable || partitions {
 			// Allow the clients to perform some operations without interruption
 			time.Sleep(300 * time.Millisecond)
-			go partitioner(t, cluster, ch_partitioner, &done_partitioner, unreliable, electionTimeout)
+			go partitioner(t, cluster, ch_partitioner, &done_partitioner, unreliable, partitions, electionTimeout)
 		}
 		if confchange {
 			// Allow the clients to perfrom some operations without interruption
@@ -250,7 +257,8 @@ func GenericTest(t *testing.T, part string, nclients int, unreliable bool, crash
 		atomic.StoreInt32(&done_clients, 1)     // tell clients to quit
 		atomic.StoreInt32(&done_partitioner, 1) // tell partitioner to quit
 		atomic.StoreInt32(&done_confchanger, 1) // tell confchanger to quit
-		if partitions {
+
+		if unreliable || partitions {
 			// log.Printf("wait for partitioner\n")
 			<-ch_partitioner
 			// reconnect network and submit a request. A client may
